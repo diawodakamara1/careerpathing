@@ -1,1 +1,179 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Path Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <style>
+        .select2-container {
+            @apply w-full;
+        }
+        .select2-selection {
+            @apply border border-gray-300 rounded-md h-10 flex items-center;
+        }
+        .select2-selection__rendered {
+            @apply px-3 py-1;
+        }
+        .card {
+            @apply bg-white rounded-lg shadow-lg p-6 mb-6;
+        }
+        .btn-primary {
+            @apply bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors;
+        }
+        .input-field {
+            @apply w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500;
+        }
+        .tag {
+            @apply inline-block px-2 py-1 rounded-md text-sm font-medium mr-2 mb-2;
+        }
+        .interest-tag {
+            @apply bg-blue-100 text-blue-800;
+        }
+        .skill-tag {
+            @apply bg-green-100 text-green-800;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="card">
+            <h2 class="text-2xl font-bold mb-6">Career Path Explorer</h2>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Major</label>
+                <input type="text" id="major" class="input-field" placeholder="Enter your major">
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Interests</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="interest-input" class="input-field" placeholder="Add an interest">
+                    <button onclick="addInterest()" class="btn-primary">Add</button>
+                </div>
+                <div id="interests-container" class="mt-2"></div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Skills</label>
+                <select id="skills-select" class="w-full" multiple="multiple"></select>
+                <div id="skills-container" class="mt-2"></div>
+            </div>
+
+            <button onclick="exploreCareerPaths()" class="btn-primary w-full">Explore Career Paths</button>
+        </div>
+
+        <div id="recommendations-container"></div>
+    </div>
+
+    <script>
+        const careerPaths = [
+            { 
+                id: 1, 
+                field: "Software Development", 
+                job: "Full Stack Developer", 
+                description: "Develops both client and server software, works on databases, APIs, and user interfaces.",
+                skills: ["JavaScript", "Python", "React", "Node.js", "SQL", "NoSQL", "RESTful APIs", "Git", "Agile Methodologies", "Cloud Platforms"],
+                salary: "$70,000 - $150,000" 
+            },
+            { 
+                id: 2, 
+                field: "Data Science", 
+                job: "Machine Learning Engineer", 
+                description: "Designs and implements machine learning models and systems for various applications.",
+                skills: ["Python", "TensorFlow", "PyTorch", "Scikit-learn", "SQL", "Big Data Technologies", "Statistics", "Algorithm Design", "Data Visualization", "Cloud Computing"],
+                salary: "$80,000 - $150,000" 
+            },
+            // ... Adding more paths similar to the React version
+        ];
+
+        const allSkills = Array.from(new Set(careerPaths.flatMap(path => path.skills))).sort();
+        let interests = [];
+        let selectedSkills = [];
+
+        // Initialize Select2
+        $(document).ready(function() {
+            $('#skills-select').select2({
+                data: allSkills.map(skill => ({ id: skill, text: skill })),
+                placeholder: "Select skills",
+                tags: true
+            });
+
+            $('#skills-select').on('select2:select', function(e) {
+                const skill = e.params.data.text;
+                if (!selectedSkills.includes(skill)) {
+                    selectedSkills.push(skill);
+                    updateSkillsTags();
+                }
+            });
+        });
+
+        function addInterest() {
+            const interestInput = document.getElementById('interest-input');
+            const interest = interestInput.value.trim();
+            
+            if (interest && !interests.includes(interest)) {
+                interests.push(interest);
+                interestInput.value = '';
+                updateInterestsTags();
+            }
+        }
+
+        function updateInterestsTags() {
+            const container = document.getElementById('interests-container');
+            container.innerHTML = interests.map(interest => 
+                `<span class="tag interest-tag">${interest}</span>`
+            ).join('');
+        }
+
+        function updateSkillsTags() {
+            const container = document.getElementById('skills-container');
+            container.innerHTML = selectedSkills.map(skill => 
+                `<span class="tag skill-tag">${skill}</span>`
+            ).join('');
+        }
+
+        function exploreCareerPaths() {
+            const recommendations = careerPaths.filter(path => 
+                path.skills.some(skill => selectedSkills.includes(skill))
+            );
+
+            const container = document.getElementById('recommendations-container');
+            
+            if (recommendations.length > 0) {
+                container.innerHTML = `
+                    <div class="card">
+                        <h3 class="text-xl font-semibold mb-4">Recommended Career Paths:</h3>
+                        ${recommendations.map(path => `
+                            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                <h4 class="text-lg font-semibold">${path.job}</h4>
+                                <p class="text-sm text-gray-600">Field: ${path.field}</p>
+                                <p class="mt-2">${path.description}</p>
+                                <p class="mt-2 text-sm"><strong>Skills:</strong> ${path.skills.join(", ")}</p>
+                                <p class="text-sm"><strong>Potential Salary:</strong> ${path.salary}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="card">
+                        <p class="text-center text-gray-600">No career paths found matching your skills. Try selecting different skills.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Add enter key support for interest input
+        document.getElementById('interest-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addInterest();
+            }
+        });
+    </script>
+</body>
+</html>
